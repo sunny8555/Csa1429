@@ -1,0 +1,93 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+#define MAX_RULES 10
+#define MAX_SYMBOLS 10
+
+char grammar[MAX_RULES][MAX_SYMBOLS];
+int numRules;
+
+void findFollow(char, char[], int);
+void printFollow();
+
+int main() {
+    char startSymbol;
+    printf("Enter the start symbol of the grammar: ");
+    scanf(" %c", &startSymbol);
+
+    printf("Enter the number of rules: ");
+    scanf("%d", &numRules);
+
+    printf("Enter the grammar rules:\n");
+    for (int i = 0; i < numRules; i++) {
+        printf("Rule %d: ", i + 1);
+        scanf("%s", grammar[i]);
+    }
+
+    char followSet[256] = "";
+    findFollow(startSymbol, followSet, 0);
+    printFollow();
+
+    return 0;
+}
+
+void findFollow(char nonTerminal, char followSet[], int ruleIndex) {
+    if (ruleIndex == numRules) {
+        return;
+    }
+
+    char *rule = grammar[ruleIndex];
+    int len = strlen(rule);
+
+    for (int i = 0; i < len; i++) {
+        if (rule[i] == nonTerminal) {
+            if (i < len - 1) {
+                if (rule[i + 1] >= 'A' && rule[i + 1] <= 'Z') {
+                    findFollow(rule[i + 1], followSet, 0);
+                    int j = i + 1;
+                    while (rule[j] >= 'A' && rule[j] <= 'Z') {
+                        strcat(followSet, followSet);
+                        j++;
+                    }
+                } else {
+                    char terminal[2] = {rule[i + 1], '\0'};
+                    strcat(followSet, terminal);
+                }
+            } else {
+                if (rule[i] != nonTerminal) {
+                    findFollow(rule[i], followSet, 0);
+                }
+            }
+        }
+    }
+
+    findFollow(nonTerminal, followSet, ruleIndex + 1);
+}
+
+void printFollow() {
+    printf("\nFOLLOW set for each non-terminal:\n");
+    for (int i = 0; i < numRules; i++) {
+        printf("FOLLOW(%c): { ", grammar[i][0]);
+
+        char followSet[256] = "";
+        findFollow(grammar[i][0], followSet, 0);
+
+        // Remove duplicates in the FOLLOW set
+        int len = strlen(followSet);
+        char uniqueFollowSet[256] = "";
+        for (int j = 0; j < len; j++) {
+            if (strchr(uniqueFollowSet, followSet[j]) == NULL) {
+                strncat(uniqueFollowSet, &followSet[j], 1);
+            }
+        }
+
+        // Print $ for the start symbol
+        if (grammar[i][0] == 'S') { // Replace 'S' with your actual start symbol
+            printf("$ ");
+        }
+
+        printf("%s }\n", uniqueFollowSet);
+    }
+}
