@@ -1,0 +1,15 @@
+{
+int comment_line_count = 0;
+%}
+
+%%
+"//"    { comment_line_count++; }
+.|\n    { /* Ignore other characters */ }
+
+%%
+
+int main() {
+    yylex();
+    printf("Number of comment lines: %d\n", comment_line_count);
+    return 0;
+}
